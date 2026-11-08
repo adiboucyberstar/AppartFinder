@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#14263d">
+<link rel="manifest" href="manifest.json">
+<title>Apartment Finder</title>
+<style>
+:root{--navy:#14263d;--blue:#3168a8;--bg:#f4f6f9;--card:#fff;--muted:#657286;--line:#e3e8ef;--green:#16845b;--red:#b84747}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#182536;font:15px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}
+header{background:var(--navy);color:white;padding:24px max(18px,calc((100% - 1100px)/2)) 22px}
+header h1{margin:0;font-size:25px;letter-spacing:-.4px}header p{margin:5px 0 0;color:#c9d5e4}
+main{max-width:1100px;margin:22px auto;padding:0 16px 48px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.stat,.panel,.listing{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:16px;box-shadow:0 2px 8px #172b4308}
+.stat small,.muted{color:var(--muted)}.stat strong{display:block;font-size:24px;margin-top:4px}
+.layout{display:grid;grid-template-columns:340px 1fr;gap:16px;align-items:start}
+h2{font-size:18px;margin:0 0 13px}label{display:block;font-size:13px;font-weight:650;margin:10px 0 5px}
+input,select,textarea{width:100%;padding:10px 11px;border:1px solid #ccd5e0;border-radius:9px;font:inherit;background:white;color:#182536}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button{border:0;border-radius:9px;padding:10px 13px;background:var(--blue);color:white;font:600 14px system-ui;cursor:pointer}
+button.secondary{background:#eaf0f7;color:#243d5b}button.danger{background:#fff0f0;color:var(--red)}button:disabled{opacity:.45;cursor:not-allowed}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.toolbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.toolbar select{width:auto;min-width:150px}
+.listings{display:grid;gap:10px}.listing-top{display:flex;justify-content:space-between;gap:10px;align-items:start}
+.listing h3{margin:0;font-size:16px}.score{font-weight:750;color:var(--green);background:#e8f6ef;border-radius:20px;padding:5px 10px;white-space:nowrap}
+.meta{display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:13px;margin:9px 0}
+.tags{display:flex;gap:6px;flex-wrap:wrap}.tag{font-size:12px;padding:4px 8px;border-radius:20px;background:#eef2f6}.tag.ok{background:#e8f6ef;color:#126b49}.tag.no{background:#fff0f0;color:#a33}
+.card-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.card-actions button{font-size:12px;padding:7px 9px}
+.empty{padding:32px 16px;text-align:center;color:var(--muted);border:1px dashed #cbd4df;border-radius:13px}
+.notice{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.5}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:520px}th,td{text-align:left;padding:9px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:650}
+.table-wrap{overflow:auto;margin-top:14px}.hidden{display:none!important}
+dialog{border:0;border-radius:16px;max-width:480px;width:calc(100% - 28px);padding:22px;box-shadow:0 20px 60px #0003}dialog::backdrop{background:#10203388}
+@media(max-width:800px){.layout{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}main{margin-top:14px}.toolbar select{flex:1}}
+@media(max-width:390px){.stats{gap:8px}.stat{padding:12px}.stat strong{font-size:21px}}
+</style>
+</head>
+<body>
+<header><h1>Apartment Finder</h1><p>Ton comparateur personnel d'appartements · Paris & proche banlieue</p></header>
+<main>
+<section class="stats">
+ <div class="stat"><small>Annonces suivies</small><strong id="count">0</strong></div>
+ <div class="stat"><small>Meilleur score</small><strong id="best">—</strong></div>
+ <div class="stat"><small>Loyer moyen</small><strong id="average">—</strong></div>
+ <div class="stat"><small>Conformes aux critères</small><strong id="eligible">0</strong></div>
+</section>
+<div class="layout">
+<section class="panel">
+<h2 id="formTitle">Ajouter un appartement</h2>
+<form id="listingForm">
+ <input id="editId" type="hidden">
+ <label for="title">Titre de l'annonce *</label><input id="title" required placeholder="T2 lumineux à Vincennes">
+ <label for="url">Lien de l'annonce</label><input id="url" type="url" placeholder="https://...">
+ <label for="city">Ville / quartier *</label><input id="city" required placeholder="Cachan, Paris 13e…">
+ <div class="row">
+  <div><label for="rent">Loyer CC (€) *</label><input id="rent" type="number" min="0" required value="1000"></div>
+  <div><label for="area">Surface (m²) *</label><input id="area" type="number" min="1" required value="40"></div>
+ </div>
+ <div class="row">
+  <div><label for="travel">Trajet (minutes) *</label><input id="travel" type="number" min="0" required value="25"></div>
+  <div><label for="dpe">DPE</label><select id="dpe"><option>A</option><option>B</option><option>C</option><option selected>D</option><option>E</option><option>F</option><option>G</option></select></div>
+ </div>
+ <div class="row">
+  <div><label for="condition">État général / 5</label><select id="condition"><option>1</option><option>2</option><option>3</option><option selected>4</option><option>5</option></select></div>
+  <div><label for="equipment">Équipements / 5</label><select id="equipment"><option>0</option><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select></div>
+ </div>
+ <div class="actions"><button type="submit" id="saveBtn">Ajouter au comparateur</button><button type="button" class="secondary hidden" id="cancelEdit">Annuler</button></div>
+</form>
+<p class="notice">Le trajet est à renseigner manuellement selon ton point de départ habituel. Le lien est conservé, mais les sites d'annonces ne sont pas automatiquement lus.</p>
+</section>
+<section>
+ <div class="toolbar">
+  <select id="filter" aria-label="Filtrer"><option value="all">Toutes les annonces</option><option value="budget">Budget respecté</option><option value="travel">Trajet respecté</option><option value="criteria">Tous critères respectés</option></select>
+  <select id="sort" aria-label="Trier"><option value="score">Meilleur score</option><option value="rent">Loyer croissant</option><option value="area">Surface décroissante</option><option value="travel">Trajet le plus court</option></select>
+ </div>
+ <div id="listings" class="listings"></div>
+ <div class="table-wrap" id="tableWrap"></div>
+ <div class="actions">
+  <button class="secondary" id="exportBtn">Exporter mes données</button>
+  <button class="secondary" id="importBtn">Importer une sauvegarde</button>
+  <input class="hidden" id="importFile" type="file" accept="application/json">
+ </div>
+ <p class="notice">Tes données sont enregistrées dans le stockage local de ce navigateur. Exporte régulièrement une sauvegarde JSON. Elles ne se synchronisent pas automatiquement entre appareils.</p>
+</section>
+</div>
+</main>
+<dialog id="deleteDialog"><h2>Supprimer cette annonce ?</h2><p class="muted">Cette action est définitive, sauf si tu as exporté une sauvegarde.</p><div class="actions"><button class="danger" id="confirmDelete">Supprimer</button><button class="secondary" id="cancelDelete">Annuler</button></div></dialog>
+<script>
+const KEY='apartment-finder-v1';
+let data=load(), pendingDelete=null;
+const $=id=>document.getElementById(id);
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch{return []}}
+function persist(){localStorage.setItem(KEY,JSON.stringify(data));render()}
+function score(a){
+ const price=Math.max(0,25*(1-Math.max(0,a.rent-1200)/400));
+ const commute=Math.max(0,25*(1-Math.max(0,a.travel-30)/30));
+ const size=Math.min(15,15*a.area/60);
+ const state=15*a.condition/5, amenities=2*a.equipment;
+ const energy={A:10,B:9,C:8,D:6,E:4,F:2,G:0}[a.dpe]??6;
+ return Math.round(price+commute+size+state+amenities+energy);
+}
+function euro(n){return new Intl.NumberFormat('fr-FR',{maximumFractionDigits:0}).format(n)+' €'}
+function passes(a){return a.rent<=1200&&a.area>=35&&a.travel<=30}
+function safe(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function render(){
+ $('count').textContent=data.length;
+ $('best').textContent=data.length?score([...data].sort((a,b)=>score(b)-score(a))[0])+'/100':'—';
+ $('average').textContent=data.length?euro(data.reduce((s,a)=>s+a.rent,0)/data.length):'—';
+ $('eligible').textContent=data.filter(passes).length;
+ let rows=[...data], f=$('filter').value;
+ if(f==='budget')rows=rows.filter(a=>a.rent<=1200);
+ if(f==='travel')rows=rows.filter(a=>a.travel<=30);
+ if(f==='criteria')rows=rows.filter(passes);
+ const sort=$('sort').value;
+ rows.sort((a,b)=>sort==='rent'?a.rent-b.rent:sort==='area'?b.area-a.area:sort==='travel'?a.travel-b.travel:score(b)-score(a));
+ $('listings').innerHTML=rows.length?rows.map((a,i)=>`
+ <article class="listing">
+  <div class="listing-top"><div><h3>${i+1}. ${safe(a.title)}</h3><div class="muted">${safe(a.city)}</div></div><span class="score">${score(a)}/100</span></div>
+  <div class="meta"><span><b>${euro(a.rent)}</b> CC</span><span><b>${a.area} m²</b></span><span><b>${a.travel} min</b></span><span>DPE <b>${a.dpe}</b></span></div>
+  <div class="tags"><span class="tag ${a.rent<=1200?'ok':'no'}">${a.rent<=1200?'Budget OK':'Budget dépassé'}</span><span class="tag ${a.area>=35?'ok':'no'}">${a.area>=35?'Surface OK':'Surface insuffisante'}</span><span class="tag ${a.travel<=30?'ok':'no'}">${a.travel<=30?'Trajet OK':'Trajet dépassé'}</span></div>
+  <div class="meta">État ${a.condition}/5 · Équipements ${a.equipment}/5 · DPE ${a.dpe}</div>
+  <div class="card-actions">${a.url?`<a href="${safe(a.url)}" target="_blank" rel="noopener"><button type="button" class="secondary">Ouvrir l'annonce ↗</button></a>`:''}<button type="button" class="secondary" data-edit="${a.id}">Modifier</button><button type="button" class="danger" data-delete="${a.id}">Supprimer</button></div>
+ </article>`).join(''):'<div class="empty">Aucune annonce dans cette vue.<br>Ajoute un appartement avec le formulaire pour commencer.</div>';
+ $('tableWrap').innerHTML=rows.length?`<table><thead><tr><th>Appartement</th><th>Loyer CC</th><th>m²</th><th>Trajet</th><th>DPE</th><th>Score</th></tr></thead><tbody>${rows.map(a=>`<tr><td>${safe(a.title)}</td><td>${euro(a.rent)}</td><td>${a.area}</td><td>${a.travel} min</td><td>${a.dpe}</td><td><b>${score(a)}/100</b></td></tr>`).join('')}</tbody></table>`:'';
+}
+function resetForm(){ $('listingForm').reset();$('editId').value='';$('rent').value=1000;$('area').value=40;$('travel').value=25;$('formTitle').textContent='Ajouter un appartement';$('saveBtn').textContent='Ajouter au comparateur';$('cancelEdit').classList.add('hidden')}
+$('listingForm').addEventListener('submit',e=>{
+ e.preventDefault();
+ const id=$('editId').value;
+ const a={id:id||String(Date.now()),title:$('title').value.trim(),url:$('url').value.trim(),city:$('city').value.trim(),rent:Number($('rent').value),area:Number($('area').value),travel:Number($('travel').value),dpe:$('dpe').value,condition:Number($('condition').value),equipment:Number($('equipment').value)};
+ if(id)data=data.map(x=>x.id===id?a:x);else data.push(a);
+ resetForm();persist();
+});
+$('listings').addEventListener('click',e=>{
+ const edit=e.target.closest('[data-edit]'),del=e.target.closest('[data-delete]');
+ if(edit){const a=data.find(x=>x.id===edit.dataset.edit);for(const k of ['title','url','city','rent','area','travel','dpe','condition','equipment'])$(k).value=a[k];$('editId').value=a.id;$('formTitle').textContent='Modifier l’appartement';$('saveBtn').textContent='Enregistrer les modifications';$('cancelEdit').classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'})}
+ if(del){pendingDelete=del.dataset.delete;$('deleteDialog').showModal()}
+});
+$('cancelEdit').onclick=resetForm;
+$('cancelDelete').onclick=()=>$('deleteDialog').close();
+$('confirmDelete').onclick=()=>{data=data.filter(a=>a.id!==pendingDelete);$('deleteDialog').close();persist()};
+$('filter').onchange=render;$('sort').onchange=render;
+$('exportBtn').onclick=()=>{const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='mes-appartements.json';a.click();URL.revokeObjectURL(a.href)};
+$('importBtn').onclick=()=>$('importFile').click();
+$('importFile').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const parsed=JSON.parse(await file.text());if(!Array.isArray(parsed))throw Error();if(confirm('Remplacer tes annonces actuelles par la sauvegarde importée ?')){data=parsed;persist()}}catch{alert('Fichier de sauvegarde invalide.')}e.target.value=''};
+render();
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script>
+</body></html>

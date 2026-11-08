@@ -1,0 +1,9 @@
+{
+  "name": "Apartment Finder",
+  "short_name": "Appart Finder",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4f6f9",
+  "theme_color": "#14263d",
+  "icons": []
+}
